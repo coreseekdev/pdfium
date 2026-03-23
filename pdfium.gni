@@ -91,6 +91,10 @@ declare_args() {
 
   # Don't build against bundled zlib.
   use_system_zlib = false
+
+  # Set to true when building for WASI target (via custom_toolchain).
+  # Enables WASI-specific defines (ICU timezone, POSIX extensions).
+  pdf_wasi_build = false
 }
 
 assert(!pdf_is_complete_lib || !is_component_build,

@@ -15,6 +15,10 @@ default_args = {
   partition_alloc_is_debug = false
   enable_pkeys = false
 
+  # Skia doesn't support wasm, disable by default
+  # Set checkout_skia = true in args.gn if needed for other targets
+  checkout_skia = false
+
   # PDFs only need to run JavaScript.
   v8_enable_webassembly = false
 

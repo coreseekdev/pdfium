@@ -31,6 +31,18 @@ config("pdfium_common_config") {
   include_dirs = [ "." ]
   defines = []
 
+  # WASI: Enable POSIX extensions for fseeko/ftello (needed by libopenjpeg)
+  if (pdf_wasi_build) {
+    cflags += [ "-D_POSIX_C_SOURCE=200809L" ]
+
+    # WASI: Use ICU's built-in timezone database (system tzset/timezone/tzname unavailable)
+    defines += [
+      "U_HAVE_TZSET=0",
+      "U_HAVE_TIMEZONE=0",
+      "U_HAVE_TZNAME=0",
+    ]
+  }
+
   if (!use_system_libopenjpeg2) {
     defines += [ "OPJ_STATIC" ]
   }
@@ -447,7 +459,7 @@ group("gn_check") {
 
   # TODO(crbug.com/pdfium/1832): Remove !is_android when //third_party/expat is
   # available.
-  if (defined(checkout_skia) && checkout_skia && !is_android && !is_wasm) {
+  if (defined(checkout_skia) && checkout_skia && !is_android && !is_wasm && current_cpu != "wasm") {
     deps += [ "//skia" ]
   }
 }

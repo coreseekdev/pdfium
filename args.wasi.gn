@@ -1,0 +1,66 @@
+# PDFium WASI Build Arguments — no build/ patches required.
+#
+# How it works:
+#   custom_toolchain overrides the default toolchain selection in
+#   BUILDCONFIG.gn, so target_os can stay as the host OS (cross-compile).
+#   The toolchain reports current_os="emscripten" to build/ so that
+#   is_wasm=true (skips clang runtime libs, correct compiler behavior).
+#   PDFium-specific WASI logic uses the pdf_wasi_build flag.
+#
+# Usage:
+#   mkdir -p out/wasi && cp args.wasi.gn out/wasi/args.gn
+#   # edit wasi_sdk_path in out/wasi/args.gn
+#   gn gen out/wasi && ninja -C out/wasi pdfium
+
+# Cross-compile: host OS stays as-is, target_cpu tells GN it's wasm.
+target_cpu = "wasm"
+# Use "linux" as target_os to avoid BUILDCONFIG.gn's emscripten assert
+# toolchain_args sets current_os="emscripten" for is_wasm=true
+target_os = "linux"
+
+# Override default toolchain via GN's built-in mechanism.
+# This bypasses BUILDCONFIG.gn's target_os → toolchain mapping entirely.
+custom_toolchain = "//toolchain/wasi:wasi"
+
+# WASI SDK path — adjust to match your local installation
+wasi_sdk_path = "C:/msys64/opt/wasi-sdk/wasi-sdk-30.0-x86_64-windows"
+
+# Skia doesn't support wasm, so don't checkout/use it
+checkout_skia = false
+pdf_use_skia = false
+
+# Compiler settings
+is_clang = true
+is_debug = false
+use_custom_libcxx = false
+
+# PDFium feature configuration
+pdf_enable_v8 = false
+pdf_enable_xfa = false
+pdf_use_skia = false
+
+# Enable WASI-specific defines in PDFium code
+pdf_wasi_build = true
+
+# Build configuration
+is_component_build = false
+pdf_is_standalone = true
+pdf_is_complete_lib = true
+
+# Disable Partition Alloc (unsupported on WASI)
+pdf_use_partition_alloc = false
+
+# Bundle FreeType
+pdf_bundle_freetype = true
+
+# Use built-in zlib
+use_system_zlib = false
+
+# No debug symbols
+symbol_level = 0
+
+# Disable Chrome clang plugins
+clang_use_chrome_plugins = false
+
+# Don't treat warnings as errors
+treat_warnings_as_errors = false

@@ -1,0 +1,112 @@
+# Copyright 2024 PDFium WASI Port
+# WASI-SDK toolchain for GN build system.
+#
+# Uses custom_toolchain override — no build/ patches required.
+# The toolchain reports current_os="emscripten" so that build/ sees
+# is_wasm=true (skips clang runtime libs, sets correct compiler behavior).
+# PDFium code uses the pdf_wasi_build flag for WASI-specific logic.
+#
+# Usage:
+#   gn gen out/wasi --args='import("//args.wasi.gn")'
+#   ninja -C out/wasi pdfium
+
+import("//build/toolchain/gcc_toolchain.gni")
+
+declare_args() {
+  # Absolute path to WASI SDK installation.
+  # Override in args.gn or via build_wasi.sh (WASI_SDK_PATH env).
+  wasi_sdk_path = ""
+}
+
+assert(wasi_sdk_path != "",
+       "wasi_sdk_path must be set in args.gn " +
+           "(e.g. wasi_sdk_path = \"/opt/wasi-sdk/wasi-sdk-30.0\")")
+
+wasi_sysroot = "$wasi_sdk_path/share/wasi-sysroot"
+
+# Common compile flags for all WASI toolchains:
+#   --sysroot                           : WASI sysroot from SDK
+#   -fvisibility=default                : Export symbols (needed for WASI module APIs)
+#   -D_WASI_EMULATED_MMAN               : Enable mmap emulation
+#   -D_WASI_EMULATED_SIGNAL             : Enable signal emulation
+#   -mllvm -wasm-enable-sjlj            : Enable setjmp/longjmp support
+#   -mllvm -wasm-use-legacy-eh=false    : Standard exception format (wasmtime)
+_wasi_common_flags = "--sysroot=$wasi_sysroot -fvisibility=default -D_WASI_EMULATED_MMAN -D_WASI_EMULATED_SIGNAL -mllvm -wasm-enable-sjlj -mllvm -wasm-use-legacy-eh=false"
+
+# WASI standard toolchain (single-threaded)
+#
+# current_os = "emscripten" is intentional: it makes Chromium's build/
+# system set is_wasm=true, which correctly skips clang runtime library
+# detection (clang_lib template) and disables linux/win-specific linker
+# flags.  The actual compiler/linker invoked is WASI SDK's clang, not
+# emscripten — the OS label only affects GN variable computation.
+gcc_toolchain("wasi") {
+  cc = "$wasi_sdk_path/bin/wasm32-wasi-clang"
+  cxx = "$wasi_sdk_path/bin/wasm32-wasi-clang++"
+  ar = "$wasi_sdk_path/bin/llvm-ar"
+  ld = cxx
+  nm = "$wasi_sdk_path/bin/llvm-nm"
+  readelf = "/bin/true"
+
+  extra_cflags = _wasi_common_flags
+  extra_cxxflags = _wasi_common_flags
+  extra_ldflags = "--sysroot=$wasi_sysroot -lwasi-emulated-mman -lwasi-emulated-signal"
+
+  toolchain_args = {
+    current_cpu = "wasm"
+    current_os = "emscripten"
+    is_clang = true
+    use_custom_libcxx = false
+    # Override is_win/is_linux since target_os stays as host OS
+    is_win = false
+    is_linux = true
+  }
+}
+
+# WASI toolchain with threads support
+gcc_toolchain("wasi_threads") {
+  cc = "$wasi_sdk_path/bin/wasm32-wasi-threads-clang"
+  cxx = "$wasi_sdk_path/bin/wasm32-wasi-threads-clang++"
+  ar = "$wasi_sdk_path/bin/llvm-ar"
+  ld = cxx
+  nm = "$wasi_sdk_path/bin/llvm-nm"
+  readelf = "/bin/true"
+
+  extra_cflags = "$_wasi_common_flags -pthread"
+  extra_cxxflags = "$_wasi_common_flags -pthread"
+  extra_ldflags = "--sysroot=$wasi_sysroot -pthread -lwasi-emulated-mman -lwasi-emulated-signal"
+
+  toolchain_args = {
+    current_cpu = "wasm"
+    current_os = "emscripten"
+    is_clang = true
+    use_custom_libcxx = false
+    # Override is_win/is_linux since target_os stays as host OS
+    is_win = false
+    is_linux = true
+  }
+}
+
+# WASI Preview2 toolchain
+gcc_toolchain("wasip2") {
+  cc = "$wasi_sdk_path/bin/wasm32-wasip2-clang"
+  cxx = "$wasi_sdk_path/bin/wasm32-wasip2-clang++"
+  ar = "$wasi_sdk_path/bin/llvm-ar"
+  ld = cxx
+  nm = "$wasi_sdk_path/bin/llvm-nm"
+  readelf = "/bin/true"
+
+  extra_cflags = _wasi_common_flags
+  extra_cxxflags = _wasi_common_flags
+  extra_ldflags = "--sysroot=$wasi_sysroot -lwasi-emulated-mman -lwasi-emulated-signal"
+
+  toolchain_args = {
+    current_cpu = "wasm"
+    current_os = "emscripten"
+    is_clang = true
+    use_custom_libcxx = false
+    # Override is_win/is_linux since target_os stays as host OS
+    is_win = false
+    is_linux = true
+  }
+}

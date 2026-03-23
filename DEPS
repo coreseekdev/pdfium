@@ -982,4 +982,12 @@ hooks = [
                Var('rbe_instance'),
                ],
   },
+  # Apply WASI build support patches to Chromium build/ directory.
+  # These patches add WebAssembly (wasm32-wasi) support to the build system.
+  # Patches are automatically applied after gclient sync.
+  {
+    'name': 'apply_wasi_patches',
+    'pattern': '.',
+    'action': ['python3', 'patches/apply_wasi_patches.py'],
+  },
 ]

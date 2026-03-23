@@ -1,0 +1,51 @@
+diff --git a/config/clang/BUILD.gn b/config/clang/BUILD.gn
+index 5031ea2..36892c1 100644
+--- a/config/clang/BUILD.gn
++++ b/config/clang/BUILD.gn
+@@ -154,7 +154,7 @@ group("llvm-symbolizer_data") {
+ }
+ 
+ template("clang_lib") {
+-  if (!defined(invoker.libname) || is_wasm) {
++  if (!defined(invoker.libname) || is_wasm || current_cpu == "wasm") {
+     not_needed(invoker, "*")
+     config(target_name) {
+     }
+@@ -198,6 +198,9 @@ template("clang_lib") {
+           _dir = "ppc64le-unknown-linux-gnu"
+         } else if (current_cpu == "s390x") {
+           _dir = "s390x-unknown-linux-gnu"
++        } else if (current_cpu == "wasm") {
++          # WebAssembly (WASI) - use wasm32-wasi as the directory
++          _dir = "wasm32-wasi"
+         } else {
+           assert(false)  # Unhandled cpu type
+         }
+diff --git a/config/compiler/BUILD.gn b/config/compiler/BUILD.gn
+index b8578a7..e550f18 100644
+--- a/config/compiler/BUILD.gn
++++ b/config/compiler/BUILD.gn
+@@ -728,7 +728,8 @@ config("compiler") {
+     # TODO(crbug.com/376278218): This causes segfault on Linux ARM builds.
+     # It also causes segfault on Linux s390x:
+     # https://github.com/llvm/llvm-project/issues/149511
+-    if (is_linux && use_lld && current_cpu != "arm" && current_cpu != "s390x") {
++    if (is_linux && use_lld && current_cpu != "arm" && current_cpu != "s390x" &&
++        current_cpu != "wasm") {
+       cflags += [ "-Wa,--crel,--allow-experimental-crel" ]
+     }
+   }
+diff --git a/config/rust.gni b/config/rust.gni
+index a55e7c5..93c5cd9 100644
+--- a/config/rust.gni
++++ b/config/rust.gni
+@@ -247,6 +247,9 @@ if (is_linux || is_chromeos) {
+     rust_abi_target = "s390x-unknown-linux-gnu"
+   } else if (current_cpu == "loong64") {
+     rust_abi_target = "loongarch64-unknown-linux-gnu"
++  } else if (current_cpu == "wasm") {
++    # WebAssembly target (WASI or Emscripten)
++    rust_abi_target = "wasm32-wasi"
+   } else {
+     # Best guess for other future platforms.
+     rust_abi_target = current_cpu + "-unknown-linux-gnu"
