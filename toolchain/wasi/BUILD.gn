@@ -16,6 +16,10 @@ declare_args() {
   # Absolute path to WASI SDK installation.
   # Override in args.gn or via build_wasi.sh (WASI_SDK_PATH env).
   wasi_sdk_path = ""
+
+  # Platform flags (override for WASI cross-compilation where target_os stays as host OS)
+  is_win = false
+  is_linux = false
 }
 
 assert(wasi_sdk_path != "",
