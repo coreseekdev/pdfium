@@ -1,0 +1,14 @@
+# Copyright 2025 PDFium Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+# PDFium-specific libpng visibility overrides.
+#
+# This file extends the visibility list in //third_party/libpng/visibility.gni
+# to allow PDFium's fpdfdk to depend on libpng.
+
+import("//third_party/libpng/visibility.gni")
+
+# Allow fpdfsdk to depend on libpng
+# (needed for PDF encoding support in WASI builds)
+visibility += [ "//fpdfsdk/*" ]

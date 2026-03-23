@@ -33,9 +33,12 @@ wasi_sysroot = "$wasi_sdk_path/share/wasi-sysroot"
 #   -fvisibility=default                : Export symbols (needed for WASI module APIs)
 #   -D_WASI_EMULATED_MMAN               : Enable mmap emulation
 #   -D_WASI_EMULATED_SIGNAL             : Enable signal emulation
+#   -DU_HAVE_TZSET=0                    : ICU: disable tzset (not available in WASI)
+#   -DU_HAVE_TIMEZONE=0                 : ICU: disable timezone (not available in WASI)
+#   -DU_HAVE_TZNAME=0                   : ICU: disable tzname (not available in WASI)
 #   -mllvm -wasm-enable-sjlj            : Enable setjmp/longjmp support
 #   -mllvm -wasm-use-legacy-eh=false    : Standard exception format (wasmtime)
-_wasi_common_flags = "--sysroot=$wasi_sysroot -fvisibility=default -D_WASI_EMULATED_MMAN -D_WASI_EMULATED_SIGNAL -mllvm -wasm-enable-sjlj -mllvm -wasm-use-legacy-eh=false"
+_wasi_common_flags = "--sysroot=$wasi_sysroot -fvisibility=default -D_WASI_EMULATED_MMAN -D_WASI_EMULATED_SIGNAL -DU_HAVE_TZSET=0 -DU_HAVE_TIMEZONE=0 -DU_HAVE_TZNAME=0 -mllvm -wasm-enable-sjlj -mllvm -wasm-use-legacy-eh=false"
 
 # WASI standard toolchain (single-threaded)
 #
